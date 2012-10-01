@@ -11,43 +11,20 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 public class ResultActivity extends Activity implements OnClickListener {
-	private String result = "not set";
+	private Coin coin = new Coin();
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.result);
-		setResult(flipCoin());
-		Log.d("Demo", getResult());
 		TextView resultView = (TextView) this.findViewById(R.id.result_value_label);
-		resultView.setText(this.getResult());
+		resultView.setText(this.coin.flip());
+		Log.d("Demo", this.coin.getResult());
 
 		View flipCoinButton = findViewById(R.id.back_to_menu_button);
 		flipCoinButton.setOnClickListener(this);
 	}
 
-	public void setResult(String result) {
-		this.result = result;
-	}
-
-	public String getResult() {
-		return result;
-	}
-
-	private static String flipCoin() {
-		Random rand = new Random();
-		Double flip = rand.nextDouble();
-		String result = "";
-
-		if (flip < 0.5)
-			result = "heads";
-		else
-			result = "tails";
-
-		return result;
-	}
-
-	@Override
 	public void onClick(View v) {
 		this.finish();
 	}
