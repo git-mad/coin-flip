@@ -70,6 +70,12 @@ public class MainActivity extends Activity implements OnClickListener {
     }
     
     @Override
+    protected void onDestroy() {
+        // TODO Auto-generated method stub
+        super.onDestroy();
+    }
+    
+    @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt(         MainActivity.COUNT_VAR,     this.counter);
