@@ -36,7 +36,7 @@ public class ResultActivity extends Activity implements OnClickListener {
 		
 		//TextView text = (TextView) this.findViewById(R.id.result_value_label);
 		//text.setText(getResult());
-		
+				
 		if (getResult() == "heads")
 		{
 			resultImage = R.drawable.heads;
