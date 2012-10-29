@@ -3,6 +3,8 @@ package coinFlipV1.gitmad.app;
 import java.util.Random;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -14,9 +16,8 @@ import android.view.animation.Animation.AnimationListener;
 import android.view.animation.AnimationSet;
 import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.ViewAnimator;
+import android.widget.*;
+import coinFlipV1.gitmad.app.database.LeaderboardDAO;
 import coinFlipV1.gitmad.app.models.Coin;
 import coinFlipV1.gitmad.app.models.Streak;
 
@@ -25,19 +26,17 @@ public class ResultActivity extends Activity implements OnClickListener {
 	private int resultImage = 0;
     private Streak streak;
     public static final String PREFS_NAME = "PrefsFile";
+    private LeaderboardDAO leaderboardDAO;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.result);
+
+        leaderboardDAO = new LeaderboardDAO(getApplicationContext());
 		
 		setResult(Coin.flip());
 
-        updateStreak(result);
-
-        TextView streakText = (TextView) this.findViewById(R.id.streak_label);
-        streakText.setText(createStreakText(streak));
-		
 		Log.d("Demo", "" + getResult());
 		
 		int images[] = {R.drawable.heads, R.drawable.tails};
@@ -60,6 +59,11 @@ public class ResultActivity extends Activity implements OnClickListener {
 
 		View flipCoinButton = findViewById(R.id.back_to_menu_button);
 		flipCoinButton.setOnClickListener(this);
+
+        updateStreak(result);
+
+        TextView streakText = (TextView) this.findViewById(R.id.streak_label);
+        streakText.setText(createStreakText(streak));
 	}
 
     private String createStreakText(Streak streak) {
@@ -79,6 +83,33 @@ public class ResultActivity extends Activity implements OnClickListener {
         return result;
     }
 
+    private void promptForHighScore() {
+        AlertDialog.Builder alert = new AlertDialog.Builder(this);
+
+        alert.setTitle("Title");
+        alert.setMessage("Message");
+
+        // Set an EditText view to get user input
+        final EditText input = new EditText(this);
+        alert.setView(input);
+
+        alert.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                String value = input.getText().toString();
+                leaderboardDAO.createLeaderboardEntry(value, streak.getLength(), System.currentTimeMillis());
+                Toast.makeText(getApplicationContext(), value, Toast.LENGTH_LONG).show();
+            }
+        });
+
+        alert.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int whichButton) {
+                // Canceled.
+            }
+        });
+
+        alert.show();
+    }
+
     private void updateStreak(boolean result) {
         SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
         streak = new Streak(settings.getBoolean("streakType", false), settings.getInt("streakLength", 0));
@@ -86,6 +117,7 @@ public class ResultActivity extends Activity implements OnClickListener {
         if (result == streak.getType()) {
             streak.incrementLength();
         } else {
+            promptForHighScore();
             streak = new Streak(result);
         }
     }

@@ -11,6 +11,7 @@ public class Streak {
 
     public Streak(boolean type) {
         this.type = type;
+        this.length = 1;
     }
 
     public Streak(boolean type, int length) {
