@@ -9,8 +9,13 @@ public class Streak {
         this.length = 1;
     }
 
-    public Streak(boolean false) {
-        this.type = false;
+    public Streak(boolean type) {
+        this.type = type;
+    }
+
+    public Streak(boolean type, int length) {
+        this.type = type;
+        this.length = length;
     }
 
     public void incrementLength() {

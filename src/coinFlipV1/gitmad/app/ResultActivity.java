@@ -4,6 +4,7 @@ import java.util.Random;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -16,19 +17,28 @@ import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.ViewAnimator;
+import coinFlipV1.gitmad.app.models.Coin;
+import coinFlipV1.gitmad.app.models.Streak;
 
 public class ResultActivity extends Activity implements OnClickListener {
-	private String result = "not set";
+	private boolean result = false;
 	private int resultImage = 0;
+    private Streak streak;
+    public static final String PREFS_NAME = "PrefsFile";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.result);
 		
-		setResult(flipCoin());
+		setResult(Coin.flip());
+
+        updateStreak(result);
+
+        TextView streakText = (TextView) this.findViewById(R.id.streak_label);
+        streakText.setText(createStreakText(streak));
 		
-		Log.d("Demo", getResult());
+		Log.d("Demo", "" + getResult());
 		
 		int images[] = {R.drawable.heads, R.drawable.tails};
 		ImageView resultImageView = (ImageView) this.findViewById(R.id.result_value_image);
@@ -37,7 +47,7 @@ public class ResultActivity extends Activity implements OnClickListener {
 		//TextView text = (TextView) this.findViewById(R.id.result_value_label);
 		//text.setText(getResult());
 				
-		if (getResult() == "heads")
+		if (result)
 		{
 			resultImage = R.drawable.heads;
 			flipAnimate(resultImageView, images, 0, 9, true);
@@ -52,11 +62,52 @@ public class ResultActivity extends Activity implements OnClickListener {
 		flipCoinButton.setOnClickListener(this);
 	}
 
-	public void setResult(String result) {
+    private String createStreakText(Streak streak) {
+        String result = "The current streak is: ";
+
+        result += streak.getLength();
+        if (streak.getType()) {
+            result += " Head";
+        } else {
+            result += " Tail";
+        }
+
+        if (streak.getLength() > 1) {
+            result += "s";
+        }
+
+        return result;
+    }
+
+    private void updateStreak(boolean result) {
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        streak = new Streak(settings.getBoolean("streakType", false), settings.getInt("streakLength", 0));
+
+        if (result == streak.getType()) {
+            streak.incrementLength();
+        } else {
+            streak = new Streak(result);
+        }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+        SharedPreferences.Editor editor = settings.edit();
+        editor.putBoolean("streakType", streak.getType());
+        editor.putInt("streakLength", streak.getLength());
+
+        editor.commit();
+
+    }
+
+	public void setResult(boolean result) {
 		this.result = result;
 	}
 
-	public String getResult() {
+	public boolean getResult() {
 		return result;
 	}
 

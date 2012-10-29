@@ -22,14 +22,13 @@
          android:layout_width="wrap_content"
          android:layout_gravity="center"
          android:layout_marginBottom="25dip" />
-      
-          <TextView
-          android:id="@+id/result_value_label"
+      <TextView
+         android:id="@+id/streak_label"
          android:layout_height="wrap_content"
          android:layout_width="wrap_content"
          android:layout_gravity="center"
          android:layout_marginBottom="25dip"
-         android:textSize="24.5sp" />
+         android:textSize="20sp" />
       <Button
          android:id="@+id/back_to_menu_button"
          android:layout_width="fill_parent"
