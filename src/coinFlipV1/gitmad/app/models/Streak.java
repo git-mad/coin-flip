@@ -1,0 +1,35 @@
+package coinFlipV1.gitmad.app.models;
+
+public class Streak {
+    private boolean type;
+    private int length;
+
+    public Streak() {
+        this.type = false;
+        this.length = 1;
+    }
+
+    public Streak(boolean false) {
+        this.type = false;
+    }
+
+    public void incrementLength() {
+        length++;
+    }
+
+    public int getLength() {
+        return length;
+    }
+
+    public void setLength(int length) {
+        this.length = length;
+    }
+
+    public boolean getType() {
+        return type;
+    }
+
+    public void setType(boolean type) {
+        this.type = type;
+    }
+}

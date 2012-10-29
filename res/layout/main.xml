@@ -16,7 +16,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginBottom="25dip"
-            android:text="Welcome to Flip Coin"
+            android:text="Welcome to Coin Flip"
             android:textSize="24.5sp" />
 
         <TextView
@@ -31,13 +31,19 @@
             android:id="@+id/flip_coin_button"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="FLIP" />
+            android:text="Flip" />
 
         <Button
             android:id="@+id/super_flip_coin_button"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="SUPER FLIP" />
+            android:text="Flip Once" />
+
+        <Button
+            android:id="@+id/leaderboard_button"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Leaderboard"/>
         
     </LinearLayout>
 
