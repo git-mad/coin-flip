@@ -1,21 +1,23 @@
 package coinFlipV1.gitmad.app;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import android.app.Activity;
-import android.content.Intent;
+import android.content.ContentValues;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
 import android.view.animation.Animation.AnimationListener;
-import android.view.animation.AnimationSet;
-import android.view.animation.RotateAnimation;
 import android.view.animation.ScaleAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.ViewAnimator;
+import coinFlipV1.gitmad.app.db.CoinFlipDbOpenHelper;
 
 public class ResultActivity extends Activity implements OnClickListener {
 	private String result = "not set";
@@ -25,10 +27,21 @@ public class ResultActivity extends Activity implements OnClickListener {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.result);
+		setResult(flipCoin());        
 		
-		setResult(flipCoin());
-		
-		Log.d("Demo", getResult());
+		//open a writable database connection
+		CoinFlipDbOpenHelper dbHelper = new CoinFlipDbOpenHelper(this);
+	    SQLiteDatabase database = dbHelper.getWritableDatabase();
+        	    
+	    try {
+	        //record the flip and update the distribution
+    	    recordCoinFlip(database);
+    	    updateFlipDistribution(database);
+	    } finally {
+	        database.close();
+	    }
+
+	    Log.d("Demo", getResult());
 		
 		int images[] = {R.drawable.heads, R.drawable.tails};
 		ImageView resultImageView = (ImageView) this.findViewById(R.id.result_value_image);
@@ -51,6 +64,48 @@ public class ResultActivity extends Activity implements OnClickListener {
 		View flipCoinButton = findViewById(R.id.back_to_menu_button);
 		flipCoinButton.setOnClickListener(this);
 	}
+
+    private void updateFlipDistribution(SQLiteDatabase database) {
+	    //process the counts
+	    Map<Integer, Integer> map = new HashMap<Integer, Integer>();
+        map.put(0, 0);
+        map.put(1, 0);
+        int total = 0;
+        Cursor c = database.query(CoinFlipDbOpenHelper.FLIP_TABLE,
+                new String[] {CoinFlipDbOpenHelper.FLIP_TYPE, "count(*)"},
+                null, null, CoinFlipDbOpenHelper.FLIP_TYPE, null, null);
+
+        try {
+            //iterate thru the cursor...there should be 1 or 2 entries
+            //NOTE: first col of 0 indicates heads, 1 indicates tails
+            c.moveToFirst();
+            while(!c.isAfterLast()) {
+                int count = c.getInt(1);
+                map.put(c.getInt(0), count);
+                
+                total += count;
+                c.moveToNext();
+            }
+        } finally {
+            c.close();
+        }
+
+        //format the text for the flip distribution
+        String text;
+        if (total > 0) {
+            text = String.format("%d flip%s, %2.0f%% heads, %2.0f%% tails", total, total != 1 ? "s" : "", map.get(0) * 100.0 / total, map.get(1) * 100.0 / total);
+        } else {
+            text = "0 flips.";
+        }
+        TextView textView = (TextView) this.findViewById(R.id.flip_distribution);
+        textView.setText(text);
+    }
+
+    private void recordCoinFlip(SQLiteDatabase database) {
+        ContentValues values = new ContentValues();
+	    values.put(CoinFlipDbOpenHelper.FLIP_TYPE, getResult().equals("heads") ? 0 : 1);
+	    database.insert(CoinFlipDbOpenHelper.FLIP_TABLE, null, values);
+    }
 
 	public void setResult(String result) {
 		this.result = result;

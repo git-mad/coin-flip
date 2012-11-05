@@ -23,13 +23,30 @@
          android:layout_gravity="center"
          android:layout_marginBottom="25dip" />
       
-          <TextView
+      <TextView
           android:id="@+id/result_value_label"
          android:layout_height="wrap_content"
          android:layout_width="wrap_content"
          android:layout_gravity="center"
          android:layout_marginBottom="25dip"
          android:textSize="24.5sp" />
+
+      <TextView
+         android:text="Flip Distribution:"
+         android:layout_height="wrap_content"
+         android:layout_width="wrap_content"
+         android:layout_gravity="center"
+         android:layout_marginBottom="25dip"
+         android:textSize="18.0sp" />
+      
+      <TextView
+          android:id="@+id/flip_distribution"
+         android:layout_height="wrap_content"
+         android:layout_width="wrap_content"
+         android:layout_gravity="center"
+         android:layout_marginBottom="25dip"
+         android:textSize="18.0sp" />
+      
       <Button
          android:id="@+id/back_to_menu_button"
          android:layout_width="fill_parent"
