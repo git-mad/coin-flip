@@ -5,12 +5,17 @@ import java.util.Date;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.hardware.*;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
+import coinFlipV1.gitmad.app.service.RollService;
+import coinFlipV1.gitmad.app.service.RollService.RollServiceReceiver;
 
 public class MainActivity extends Activity implements OnClickListener, SensorEventListener {
     private static final String COUNT_VAR     = "count";
@@ -46,6 +51,14 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
         } else {
             this.startDate = new Date();
         }
+        
+        RollService.registerReceiver(this, new RollServiceReceiver() {
+
+            @Override
+            protected void receiveRoll(String roll) {
+                showResults(roll);
+            }
+        });
     }
 
     @Override
@@ -99,16 +112,19 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
     
 	@Override
 	public void onClick(View v) {
-	    this.counter++;
-		Intent i = new Intent(this, ResultActivity.class); //private intent
-		startActivity(i);
+	    flipTheCoin();
 		Log.d("Demo", "flip coin button pressed");
 		if (v.getId() == R.id.super_flip_coin_button) {
 		    this.finish();
 		}
 	}
 	
-	public void onSensorChanged(SensorEvent event) {
+	private void flipTheCoin() {
+        this.counter++;
+        this.startService(new Intent(this, RollService.class));
+    }
+
+    public void onSensorChanged(SensorEvent event) {
 		if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER)
 			getAccelerometer(event);
 	}
@@ -132,15 +148,17 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
 			lastTime = timestamp;
 			Log.d("Demo", "Device shuffled");
 			
-			this.counter++;
-			Intent i = new Intent(this, ResultActivity.class);
-			startActivity(i);
+			flipTheCoin();
 		}
 	}
 
 	@Override
 	public void onAccuracyChanged(Sensor arg0, int arg1) {
-		// TODO Auto-generated method stub
-		
 	}
+	
+	private void showResults(String results) {
+        Intent i = new Intent(this, ResultActivity.class);
+        i.putExtra(ResultActivity.PARAM_RESULT, results);
+        startActivity(i);
+	}	
 }

@@ -10,6 +10,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.SparseIntArray;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.animation.Animation;
@@ -20,14 +21,19 @@ import android.widget.TextView;
 import coinFlipV1.gitmad.app.db.CoinFlipDbOpenHelper;
 
 public class ResultActivity extends Activity implements OnClickListener {
-	private String result = "not set";
+    
+    public static final String PARAM_RESULT = "result";
+
+    private String result = "not set";
 	private int resultImage = 0;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.result);
-		setResult(flipCoin());        
+		
+		String result = getIntent().getExtras().getString(ResultActivity.PARAM_RESULT);
+		setResult(result);
 		
 		//open a writable database connection
 		CoinFlipDbOpenHelper dbHelper = new CoinFlipDbOpenHelper(this);
@@ -67,9 +73,9 @@ public class ResultActivity extends Activity implements OnClickListener {
 
     private void updateFlipDistribution(SQLiteDatabase database) {
 	    //process the counts
-	    Map<Integer, Integer> map = new HashMap<Integer, Integer>();
-        map.put(0, 0);
-        map.put(1, 0);
+	    SparseIntArray spArray = new SparseIntArray();
+        spArray.put(0, 0);
+        spArray.put(1, 0);
         int total = 0;
         Cursor c = database.query(CoinFlipDbOpenHelper.FLIP_TABLE,
                 new String[] {CoinFlipDbOpenHelper.FLIP_TYPE, "count(*)"},
@@ -81,7 +87,7 @@ public class ResultActivity extends Activity implements OnClickListener {
             c.moveToFirst();
             while(!c.isAfterLast()) {
                 int count = c.getInt(1);
-                map.put(c.getInt(0), count);
+                spArray.put(c.getInt(0), count);
                 
                 total += count;
                 c.moveToNext();
@@ -93,7 +99,7 @@ public class ResultActivity extends Activity implements OnClickListener {
         //format the text for the flip distribution
         String text;
         if (total > 0) {
-            text = String.format("%d flip%s, %2.0f%% heads, %2.0f%% tails", total, total != 1 ? "s" : "", map.get(0) * 100.0 / total, map.get(1) * 100.0 / total);
+            text = String.format("%d flip%s, %2.0f%% heads, %2.0f%% tails", total, total != 1 ? "s" : "", spArray.get(0) * 100.0 / total, spArray.get(1) * 100.0 / total);
         } else {
             text = "0 flips.";
         }
@@ -115,19 +121,6 @@ public class ResultActivity extends Activity implements OnClickListener {
 		return result;
 	}
 
-	private static String flipCoin() {
-		Random rand = new Random();
-		Double flip = rand.nextDouble();
-		String result = "";
-
-		if (flip < 0.5)
-			result = "heads";
-		else
-			result = "tails";
-
-		return result;
-	}
-	
 	private void flipAnimate(final ImageView imageView, final int images[], final int imageIndex, final int iterations, final boolean isShrunk) {
 		
 		if (iterations > 0) {

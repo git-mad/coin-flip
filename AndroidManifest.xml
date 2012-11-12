@@ -24,5 +24,6 @@
             android:name=".ResultActivity"
             android:screenOrientation="portrait" >
         </activity>
+        <service android:name=".service.RollService" />
     </application>
 </manifest>
