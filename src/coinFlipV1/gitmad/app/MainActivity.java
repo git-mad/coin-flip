@@ -1,5 +1,9 @@
 package coinFlipV1.gitmad.app;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Date;
 
 import android.app.Activity;
@@ -9,6 +13,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -29,11 +34,25 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
     
     private long lastTime;
     
+    private HttpURLConnection connection;
+    private URL url;
+    private int retries = 0;
+    
+    public void connectionSetup() {
+    	try {
+    		url = new URL("http://gitmadleaderboard.heroku.com/scores");
+    	} catch (MalformedURLException e) {
+    		throw new RuntimeException(e);
+    	}
+    }
+    
     /** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+        
+        connectionSetup();
         
         View flipCoinButton = findViewById(R.id.flip_coin_button);
         flipCoinButton.setOnClickListener(this);
@@ -112,10 +131,48 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
     
 	@Override
 	public void onClick(View v) {
-	    flipTheCoin();
-		Log.d("Demo", "flip coin button pressed");
-		if (v.getId() == R.id.super_flip_coin_button) {
+		if (v.getId() == R.id.super_flip_coin_button) 
 		    this.finish();
+		Log.d("Demo", "flip coin button pressed");
+	
+		// Spin off Async task
+		new postResultsTask().execute();
+	}
+	
+	private class postResultsTask extends AsyncTask<String, Void, Void> {
+
+		@Override
+		protected Void doInBackground(String... params) {
+			// TODO Auto-generated method stub
+			postScore("david", "100");
+			return null;
+		}
+		
+		protected void onPostExecute(Void result) {
+			flipTheCoin();
+		}
+	}
+	
+	private void postScore(String name, String score) {
+		HttpURLConnection connection = null;
+		
+		try {
+			String leaderboardEntry = new String("{\'score\': { \'name\': \'" + name + "\', \'score\': " + score + "}}");
+			connection = (HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Length", Integer.toString(leaderboardEntry.length()));
+			connection.getOutputStream().write(leaderboardEntry.getBytes());
+			connection.connect();
+			connection.getResponseCode();
+			this.retries = 0;
+		} catch (IOException e) {
+			this.retries++;
+			if(this.retries >= 5) 
+				throw new RuntimeException(e);
+		} finally {
+			if(connection != null)
+				connection.disconnect();
 		}
 	}
 	
