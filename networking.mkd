@@ -43,16 +43,15 @@ connectionSetup() is called in onCreate().
 
 ##AsyncTask
 
+###onCreate()
 
-###onClick()
-
-onClick() is where we'll want to spin off our AsyncTask because (as of Android 3.0) networking cannot be performed on the the main thread. Our asynchronous task will be called postResultsTask(), and we can spin off the new thread by calling the following:
+onCreate() is where we'll want to spin off our AsyncTask because (as of Android 3.0) networking cannot be performed on the the main thread. Our asynchronous task will be called postResultsTask(), and we can spin off the new thread by calling the following:
 
 	new postResultsTask().execute();
 
 ###postResultsTask()
 
-postResultsTask is a private class extending AsyncTask that allows us to specify what's going on in our asynchronous thread. It contains two methods: doInBackground() and onPostExecute(). doInBackground() calls a postScore() method, which contains the bulk of the work we'll push onto the asynchronous thread. onPostExecute() contains a call to flipTheCoin(), which flips our coin and moves us to ResultActivity.
+postResultsTask is a private class extending AsyncTask that allows us to specify what's going on in our asynchronous thread. It contains two methods: doInBackground() and onPostExecute(). doInBackground() calls a postScore() method, which contains the bulk of the work we'll push onto the asynchronous thread. onPostExecute() is empty for now.
 
 	private class postResultsTask extends AsyncTask\<String, Void, Void> {
 	    @Override
@@ -61,9 +60,7 @@ postResultsTask is a private class extending AsyncTask that allows us to specify
 	        return null;
 	    }
 
-	    protected void onPostExecute(Void result) {
-	        flipTheCoin();
-	    }
+	    protected void onPostExecute(Void result) {}
 	}
 
 ###postScore()
@@ -84,7 +81,7 @@ Yes the JSON object initially looks complicated, but we'll take a moment to expl
 
 ####JSON aside
 
-*JSON aside goes here*
+*Jesse Rosalia, everyone!*
 
 ###postScore() (cont'd.)
 
