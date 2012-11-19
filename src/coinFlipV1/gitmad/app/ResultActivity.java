@@ -1,5 +1,9 @@
 package coinFlipV1.gitmad.app;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;
@@ -8,6 +12,7 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.util.SparseIntArray;
@@ -24,8 +29,18 @@ public class ResultActivity extends Activity implements OnClickListener {
     
     public static final String PARAM_RESULT = "result";
 
-    private String result = "not set";
-	private int resultImage = 0;
+    private String result = "not set", name = "david";
+	private int resultImage = 0, retries = 0, currTotal = 0;
+	private HttpURLConnection connection;
+    private URL url;
+    
+    public void connectionSetup() {
+    	try {
+    		url = new URL("http://gitmadleaderboard.herokuapp.com/scores");
+    	} catch (MalformedURLException e) {
+    		throw new RuntimeException(e);
+    	}
+    }
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
@@ -35,6 +50,8 @@ public class ResultActivity extends Activity implements OnClickListener {
 		String result = getIntent().getExtras().getString(ResultActivity.PARAM_RESULT);
 		setResult(result);
 		
+		connectionSetup();
+		
 		//open a writable database connection
 		CoinFlipDbOpenHelper dbHelper = new CoinFlipDbOpenHelper(this);
 	    SQLiteDatabase database = dbHelper.getWritableDatabase();
@@ -43,6 +60,9 @@ public class ResultActivity extends Activity implements OnClickListener {
 	        //record the flip and update the distribution
     	    recordCoinFlip(database);
     	    updateFlipDistribution(database);
+    	    
+    	    // Spin off Async task
+    		new postResultsTask().execute();
 	    } finally {
 	        database.close();
 	    }
@@ -70,6 +90,42 @@ public class ResultActivity extends Activity implements OnClickListener {
 		View flipCoinButton = findViewById(R.id.back_to_menu_button);
 		flipCoinButton.setOnClickListener(this);
 	}
+	
+	private class postResultsTask extends AsyncTask<String, Void, Void> {
+
+		@Override
+		protected Void doInBackground(String... params) {
+			Log.d("currTotal", String.valueOf(currTotal));
+			postScore(name, String.valueOf(currTotal));
+			return null;
+		}
+		
+		protected void onPostExecute(Void result) {}
+	}
+	
+	private void postScore(String name, String score) {
+		HttpURLConnection connection = null;
+		
+		try {
+			String leaderboardEntry = new String("{\"score\": { \"name\": \"" + name + "\", \"score\": " + score + "}}");
+			connection = (HttpURLConnection)url.openConnection();
+			connection.setDoOutput(true);
+			connection.setRequestMethod("POST");
+			connection.setRequestProperty("Content-Type", "application/json");
+			connection.getOutputStream().write(leaderboardEntry.getBytes());
+			connection.connect();
+			connection.getResponseCode();
+			Log.d("resp code", String.valueOf(connection.getResponseCode()));
+			this.retries = 0;
+		} catch (IOException e) {
+			this.retries++;
+			if(this.retries >= 5) 
+				throw new RuntimeException(e);
+		} finally {
+			if(connection != null)
+				connection.disconnect();
+		}
+	}
 
     private void updateFlipDistribution(SQLiteDatabase database) {
 	    //process the counts
@@ -95,7 +151,7 @@ public class ResultActivity extends Activity implements OnClickListener {
         } finally {
             c.close();
         }
-
+        currTotal = total;
         //format the text for the flip distribution
         String text;
         if (total > 0) {
