@@ -40,7 +40,7 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
     
     public void connectionSetup() {
     	try {
-    		url = new URL("http://gitmadleaderboard.heroku.com/scores");
+    		url = new URL("http://gitmadleaderboard.herokuapp.com/scores");
     	} catch (MalformedURLException e) {
     		throw new RuntimeException(e);
     	}
@@ -144,7 +144,7 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
 		@Override
 		protected Void doInBackground(String... params) {
 			// TODO Auto-generated method stub
-			postScore("david", "100");
+			postScore("brandon", "13");
 			return null;
 		}
 		
@@ -157,14 +157,15 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
 		HttpURLConnection connection = null;
 		
 		try {
-			String leaderboardEntry = new String("{\'score\': { \'name\': \'" + name + "\', \'score\': " + score + "}}");
+			String leaderboardEntry = new String("{\"score\": { \"name\": \"" + name + "\", \"score\": " + score + "}}");
 			connection = (HttpURLConnection)url.openConnection();
 			connection.setDoOutput(true);
 			connection.setRequestMethod("POST");
-			connection.setRequestProperty("Content-Length", Integer.toString(leaderboardEntry.length()));
+			connection.setRequestProperty("Content-Type", "application/json");
 			connection.getOutputStream().write(leaderboardEntry.getBytes());
 			connection.connect();
 			connection.getResponseCode();
+			Log.d("resp code", String.valueOf(connection.getResponseCode()));
 			this.retries = 0;
 		} catch (IOException e) {
 			this.retries++;
