@@ -1,0 +1,115 @@
+#Networking
+
+##Main concepts
++ AsyncTask/threading
++ HTTP
++ JSON
+
+##Initialization and HTTP
+
+We'll be constructing a POST request and sending it to a specified URL. In order to do that, we need to initialize a few things first.
+
+###Imports
+
+First off, we'll need to import a few new libraries pertaining to networking and I/O.
+
+	import java.net.HttpURLConnection;
+	import java.net.MalformedURLException;
+	import java.net.URL;
+
+	import java.io.IOException;
+
+###New objects to create
+
+As we'll be connecting to the Internet using HTTP, we'll need to create a new HttpURLConnection and a new URL. *retries* is used later to help prevent a timeout.
+
+	private HttpURLConnection connection;
+	private URL url;
+	private int retries = 0;
+
+###Specifying a URL
+
+We'll be sending our scores to a leaderboard graciously built by Tomer Elmalem, and in order to do so, we'll need to specifiy which URL to POST to.
+
+connectionSetup() is called in onCreate().
+
+	public void connectionSetup() {
+	    try {
+	        url = new URL("http://gitmadleaderboard.herokuapp.com/scores");
+	    } catch (MalformedURLException e) {
+	        throw new RuntimeException(e);
+	    }
+	}
+
+##AsyncTask
+
+
+###onClick()
+
+onClick() is where we'll want to spin off our AsyncTask because (as of Android 3.0) networking cannot be performed on the the main thread. Our asynchronous task will be called postResultsTask(), and we can spin off the new thread by calling the following:
+
+	new postResultsTask().execute();
+
+###postResultsTask()
+
+postResultsTask is a private class extending AsyncTask that allows us to specify what's going on in our asynchronous thread. It contains two methods: doInBackground() and onPostExecute(). doInBackground() calls a postScore() method, which contains the bulk of the work we'll push onto the asynchronous thread. onPostExecute() contains a call to flipTheCoin(), which flips our coin and moves us to ResultActivity.
+
+	private class postResultsTask extends AsyncTask\<String, Void, Void> {
+	    @Override
+	    protected Void doInBackground(String... params) {
+	        postScore("name", "score");
+	        return null;
+	    }
+
+	    protected void onPostExecute(Void result) {
+	        flipTheCoin();
+	    }
+	}
+
+###postScore()
+
+Here's where the fun (and the bulk of our code) comes in. postScore() takes in two Strings (a name and a score) and uses them to build a JSON object to POST to our specified URL. 
+
+First, the header and connection instantiation:
+
+	private void postScore(String name, String score) {
+	    HttpURLConnection connection = null;
+
+We then construct a try-catch in which we attempt to establish a connection to gitmad-leaderboard. First, construct our JSON object:
+
+	try {
+	    String leaderboardEntry = new String("{\"score\": { \"name\": \"" + name + "\", \"score\": " + score + "}}")'
+
+Yes the JSON object initially looks complicated, but we'll take a moment to explain.
+
+####JSON aside
+
+*JSON aside goes here*
+
+###postScore() (cont'd.)
+
+We now are ready to establish a connection with gitmad-leaderboard. Steps to establish the connection:
+
++ Open the connection
++ Establish that we're going to POST or PUT
++ Set request method to POST
++ Establish that our POST request will contain a JSON object
++ Get and output stream with the size of a leaderboardEntry
++ Connect
++ Get a response code
+
+Here's our code to do all of that:
+
+	connection = (HttpURLConnection)url.openConnection();
+	connection.setDoOutput(true);
+	connection.setRequestMethod("POST");
+	connection.setRequestProperty("Content-Type", "application/json");
+	connection.getOutputStream().write(leaderboardEntry.getBytes());
+	connection.connect();
+	connection.getResponseCode();
+
+If all of this is successful, then we can set our *retries* int from before equal to 0.
+
+If it is not successful, then an IOException should be caught, and *retries* is incremented. If *retries* reaches 5, a RuntimeException should be thrown.
+
+And *finally*, if the connection isn't null already, disconnect.

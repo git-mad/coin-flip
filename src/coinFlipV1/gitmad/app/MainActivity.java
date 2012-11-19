@@ -143,7 +143,6 @@ public class MainActivity extends Activity implements OnClickListener, SensorEve
 
 		@Override
 		protected Void doInBackground(String... params) {
-			// TODO Auto-generated method stub
 			postScore("brandon", "13");
 			return null;
 		}
