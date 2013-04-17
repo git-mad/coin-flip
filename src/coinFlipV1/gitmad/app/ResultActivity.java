@@ -76,7 +76,7 @@ public class ResultActivity extends Activity implements OnClickListener {
 		//TextView text = (TextView) this.findViewById(R.id.result_value_label);
 		//text.setText(getResult());
 				
-		if (getResult() == "heads")
+		if (getResult().equals("heads"))
 		{
 			resultImage = R.drawable.heads;
 			flipAnimate(resultImageView, images, 0, 9, true);
